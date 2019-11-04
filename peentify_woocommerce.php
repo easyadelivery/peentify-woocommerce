@@ -7,7 +7,6 @@
  * Author:      Abderrazzak OXA
  * Author URI:  https://github.com/abderrazzak-oxa
  * License:     GPLv2 or later
- * Text Domain: peentify-woocommerce
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,8 +21,6 @@
  * @package Peentify Woocommerce
  * @version 1.0.0
  */
-
-
 
 /**
  * Link your peentify system with your woocommerce store
@@ -44,10 +41,10 @@ class PeentifyWooCommerce {
 	{
 		$args = array(
 			'id' => 'peentify_responsible_id',
-			'label' => __( 'Peentify responsible ID', 'pyrid' ),
+			'label' => 'Peentify responsible ID',
 			'class' => 'py-responsible-id-field',
 			'desc_tip' => true,
-			'description' => __( 'Enter The responsible ID from your peentify system', 'pyrid' ),
+			'description' => 'Enter The responsible ID from your peentify system',
 		);
 		woocommerce_wp_text_input( $args );
 	}
@@ -76,7 +73,7 @@ class PeentifyWooCommerce {
 	{
 		$args = array(
 			'id' => 'peentify_integrate_with_system',
-			'label' => __( 'Integrate With Peentify', 'pyiwp' ),
+			'label' => 'Integrate With Peentify',
 			'class' => 'py-integrate-with-peentify-checkbox',
 			'desc_tip' => true,
 		);
@@ -106,13 +103,15 @@ class PeentifyWooCommerce {
      * @return void
 	 */
 	public function afterCheckoutCreateOrder($order) {
-	    if (class_exists('WC_Order'))
-	        if (!$order instanceof WC_Order)
-	            return;
-        else
-            return;
 
+	    # check if WC_Order class is exists and if $order is instance of WC_Order class
+	    if (class_exists('WC_Order')) {
+			if (!$order instanceof WC_Order) return;
+        } else {
+			return;
+        }
 
+		# check if peentify status is not active
 	    if (!get_option('peentify_status'))
 	        return;
 
@@ -132,8 +131,8 @@ class PeentifyWooCommerce {
 				'city' => $order->get_billing_city(),
 				'customer_note' => $order->get_customer_note(),
 				'email' => $order->get_billing_email(),
-				'quantity' => $item->get_price() - ($order->get_total_discount()/ count($products)),
-				'total_price' => $item->get_quantity(),
+				'quantity' => $item->get_quantity(),
+				'total_price' => $product->get_price() - ($order->get_total_discount()/ count($products)),
 				'product_id' => $product->get_sku(),
 				'customer_ip_address' => $order->get_customer_ip_address(),
 				'customer_user_agent' => $order->get_customer_user_agent(),
@@ -221,7 +220,7 @@ class PeentifyWooCommerce {
 	}
 
 	/**
-     * admin page html
+     * admin options page
      */
 	public function peentifyAdminPageCallback(){
 		?>
@@ -265,13 +264,16 @@ class PeentifyWooCommerce {
 	public function checkIfWooCommerceIsActivated()
 	{
 		if (! class_exists( 'woocommerce' ) ) {
-			add_action('admin_notices', [$this, 'wooCommerceNotActivatedNotice']);
+			add_action('admin_notices', [$this, 'notActivatedWooCommerceNotice']);
 		}
 	}
 
-	public function wooCommerceNotActivatedNotice()
+	/**
+	 * Not Activated Woocommerce Notice
+     */
+	public function notActivatedWooCommerceNotice()
 	{
-		echo '<div class="notice notice-error is-dismissible"><p>WooCommerce is not activated, please activate it to use <b>Peentify WooCommerce Plugin</b></p></div>';
+		echo '<div class="notice notice-error"><p>WooCommerce is not activated, please activate it to use <b>Peentify WooCommerce Plugin</b></p></div>';
 	}
 
 	/**
@@ -286,5 +288,4 @@ class PeentifyWooCommerce {
 }
 
 $peentify = new PeentifyWooCommerce();
-
 $peentify->init();

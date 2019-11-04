@@ -1,0 +1,23 @@
+=== Peentify WooCommerce ===
+Contributors: peentify
+Tags: peentify, woocommerce, peentify-woocommerce, integration, Woocommerce with peentify
+Donate link: https://github.com/abderrazzak-oxa
+Requires at least: 5.6
+Tested up to: 5.2
+Requires PHP: 5.6
+Stable tag: 1.0.0
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+
+Peentify for link your peentify system to woocommerce store
+
+== Description ==
+This is a WooCommerce plugin that helps to integrate your peentify system with woocommerce store. when there is a new order checkout , this plugin will send the order to your peentify system.
+
+== Installation ==
+1. Upload "peentify-woocommerce.zip" to the "\\wp-content/plugins\\" directory.
+2. Activate the plugin through the "\\Plugins\\" menu in WordPress.
+
+== Frequently Asked Questions ==
+= For who this plugin? =
+This plugin is just for peentify customers

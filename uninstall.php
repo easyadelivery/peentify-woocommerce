@@ -1,10 +1,10 @@
 <?php
 /**
- * Peentify Uninstall
+ * Peentify-woocommerce Uninstall
  *
  * Uninstalling Peentify deletes all options.
  *
- * @package Peentify
+ * @package peentify-woocommerce
  * @since 1.0.0
  */
 
