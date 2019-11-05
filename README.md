@@ -15,8 +15,8 @@ Peentify-woocommerce is a wordpress plugin for link your peentify system to wooc
 This is a WooCommerce plugin that helps to integrate your peentify system with woocommerce store. when there is a new order checkout , this plugin will send the order to your peentify system.
 
 ### Installation
-1. Upload "peentify-woocommerce.zip" to the "\\wp-content/plugins\\" directory.
-2. Activate the plugin through the "\\Plugins\\" menu in WordPress.
+1. Upload "peentify-woocommerce.zip" to the "/wp-content/plugins" directory.
+2. Activate the plugin through the "/Plugins" menu in WordPress.
 
 ### Asked Questions 
 ##### For who this plugin?
