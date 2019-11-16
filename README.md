@@ -18,6 +18,14 @@ This is a WooCommerce plugin that helps to integrate your peentify system with w
 1. Upload "peentify-woocommerce.zip" to the "/wp-content/plugins" directory.
 2. Activate the plugin through the "/Plugins" menu in WordPress.
 
+## How to use
+1. firstly go to settings > API management for example: <code>https://demo.peentify.com/apps</code>
+2. create new app then click edit for show api key and secret
+3. go to your wordpress admin panel then settings > peentify and you must fill the main url and api key and secret, for example:<br>
+<code> main url: https://demo.peentify.com </code> <br/>
+<code> api key: MytmWyhEgCGPF9Mbj4T7dJuTJ4THuasgBy8 </code><br/>
+<code> api secret: GVa1lWSndqCBej0lGtLnyY3XFqzkdEkD61afaiDj</code>
+
 ### Asked Questions 
 ##### For who this plugin?
 This plugin is just for peentify customers
