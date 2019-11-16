@@ -58,7 +58,14 @@ class PeentifyWooCommerce {
 	 */
 	function saveResponsibleIdField( $product_id ) {
 		$product = wc_get_product( $product_id );
-		$py_responsible_id = isset( $_POST['peentify_responsible_id'] ) ? $_POST['peentify_responsible_id'] : '';
+
+		# check if exists post peentify_responsible_id if not exist or it's not integer will be empty
+		if (isset( $_POST['peentify_responsible_id'] ) && is_integer($_POST['peentify_responsible_id']))
+		    $py_responsible_id = (int) $_POST['peentify_responsible_id'];
+		else
+		    $py_responsible_id = 0;
+
+		# save the peentify_responsible_id meta
 		$product->update_meta_data( 'peentify_responsible_id', sanitize_text_field( $py_responsible_id ) );
 		$product->save();
 	}
@@ -89,8 +96,15 @@ class PeentifyWooCommerce {
 	 */
 	function saveIntegrateWithPeentifyCheckBox( $product_id ) {
 		$product = wc_get_product( $product_id );
-		$py_integrate_with_system = isset( $_POST['peentify_integrate_with_system'] ) ? $_POST['peentify_integrate_with_system'] : '';
-		$product->update_meta_data( 'peentify_integrate_with_system', sanitize_text_field( $py_integrate_with_system ) );
+
+		# check if exists post peentify_responsible_id if not exist or it's not integer will be empty
+		if (isset( $_POST['peentify_integrate_with_system'] ))
+			$py_integrate_with_system = $_POST['peentify_integrate_with_system'];
+		else
+			$py_integrate_with_system = false;
+
+		# save the peentify_integrate_with_system meta
+		$product->update_meta_data( 'peentify_integrate_with_system', rest_sanitize_boolean( $py_integrate_with_system ) );
 		$product->save();
 	}
 
@@ -124,43 +138,45 @@ class PeentifyWooCommerce {
 				continue;
 			}
 
-			$data = [
-				'name' => $order->get_formatted_billing_full_name()?$order->get_formatted_billing_full_name():$order->get_formatted_shipping_address(),
-				'address' => $order->has_billing_address()?$order->get_billing_address_1():$order->get_shipping_address_1(),
-				'phone' => $order->get_billing_phone(),
-				'city' => $order->get_billing_city(),
-				'customer_note' => $order->get_customer_note(),
-				'email' => $order->get_billing_email(),
-				'quantity' => $item->get_quantity(),
-				'total_price' => $product->get_price() - ($order->get_total_discount()/ count($products)),
-				'product_id' => $product->get_sku(),
-				'customer_ip_address' => $order->get_customer_ip_address(),
-				'customer_user_agent' => $order->get_customer_user_agent(),
-				'responsible_id' => $product->get_meta('peentify_responsible_id'),
+			# All of this fields is already validated and sanitized with woocommerce.
+			$body = [
+				'name' => sanitize_text_field($order->get_formatted_billing_full_name()?$order->get_formatted_billing_full_name():$order->get_formatted_shipping_address()),
+				'address' => sanitize_text_field($order->has_billing_address()?$order->get_billing_address_1():$order->get_shipping_address_1()),
+				'phone' => sanitize_text_field($order->get_billing_phone()),
+				'city' => sanitize_text_field($order->get_billing_city()),
+				'customer_note' => sanitize_text_field($order->get_customer_note()),
+				'email' => sanitize_email($order->get_billing_email()),
+				'quantity' => (int) $item->get_quantity(),
+				'total_price' => sanitize_text_field($product->get_price() - ($order->get_total_discount()/ count($products))),
+				'product_id' => sanitize_text_field($product->get_sku()),
+				'customer_ip_address' => sanitize_text_field($order->get_customer_ip_address()),
+				'customer_user_agent' => sanitize_text_field($order->get_customer_user_agent()),
+				'responsible_id' => $product->get_meta('peentify_responsible_id')? (int) $product->get_meta('peentify_responsible_id'): '',
 			];
-
 
 			$key = get_option('peentify_api_key');
 			$secret = get_option('peentify_api_secret');
 			$base_url = trim(get_option('peentify_main_url'), '/');
-
-			$ch = curl_init();
 			$url = $base_url . "/admin/api/orders?key=$key&secret=$secret";
-			curl_setopt($ch, CURLOPT_URL, $url);
-			curl_setopt($ch, CURLOPT_POST, 1);
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-			$res= curl_exec($ch);
-			curl_close($ch);
-			$answer = json_decode($res, true);
 
-			if ($answer['status'] != 'success')
+			# sent post data to peentify system
+			$response = wp_remote_post($url, [
+				'body' => $body,
+                'timeout' => 15
+			]);
+
+			# get the body of response
+			$response_body = json_decode($response['body']);
+
+			# unset the variables
+			unset($response, $key, $secret, $base_url, $url, $body, $product);
+
+			# check if the order is stored
+			if (!isset($response_body->status) || $response_body->status != 'success')
 			    die(json_encode([
 					'message' => 'Error processing checkout. Please try again.',
 					'status' => 'error',
-                    'error_response' => $answer
+                    'error_response' => $response_body
 				]));
 		}
 	}
@@ -201,14 +217,25 @@ class PeentifyWooCommerce {
 	 *
 	 */
 	public function registerSettings() {
+	    # add options
 		add_option( 'peentify_main_url', '');
 		add_option( 'peentify_api_key', '');
 		add_option( 'peentify_api_secret', '');
 		add_option( 'peentify_status', 0);
-		register_setting( 'peentify_settings_group', 'peentify_main_url');
-		register_setting( 'peentify_settings_group', 'peentify_api_key');
-		register_setting( 'peentify_settings_group', 'peentify_api_secret');
-		register_setting( 'peentify_settings_group', 'peentify_status');
+
+		# register settings
+		register_setting( 'peentify_settings_group', 'peentify_main_url', [
+		        'sanitize_callback' => 'esc_url',
+		]);
+		register_setting( 'peentify_settings_group', 'peentify_api_key', [
+		    'sanitize_callback' => 'sanitize_text_field',
+		]);
+		register_setting( 'peentify_settings_group', 'peentify_api_secret', [
+			'sanitize_callback' => 'sanitize_text_field',
+		]);
+		register_setting( 'peentify_settings_group', 'peentify_status', [
+			'sanitize_callback' => 'rest_sanitize_boolean',
+		]);
 	}
 
 	/**
@@ -231,22 +258,22 @@ class PeentifyWooCommerce {
 				<table class="form-table">
 					<tr valign="top">
 						<th scope="row"><label for="peentify_main_url">Main URL</label></th>
-						<td><input type="text" id="peentify_main_url" name="peentify_main_url" value="<?php echo get_option('peentify_main_url'); ?>" class="regular-text" /></td>
+						<td><input type="text" id="peentify_main_url" name="peentify_main_url" value="<?php echo esc_url( get_option('peentify_main_url') ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row"><label for="peentify_api_key">API Key</label></th>
-						<td><input type="text" id="peentify_api_key" name="peentify_api_key" value="<?php echo get_option('peentify_api_key'); ?>" class="regular-text" /></td>
+						<td><input type="text" id="peentify_api_key" name="peentify_api_key" value="<?php echo esc_attr( get_option('peentify_api_key') ); ?>" class="regular-text" /></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row"><label for="peentify_api_secret">API Secret</label></th>
-						<td><input type="text" id="peentify_api_secret" name="peentify_api_secret" value="<?php echo get_option('peentify_api_secret'); ?>" class="regular-text" /></td>
+						<td><input type="text" id="peentify_api_secret" name="peentify_api_secret" value="<?php echo esc_attr( get_option('peentify_api_secret') ); ?>" class="regular-text" /></td>
 					</tr>
                     <tr>
                         <th scope="row">Status</th>
                         <td>
                             <fieldset><legend class="screen-reader-text"><span>Status</span></legend>
                                 <label for="peentify_status">
-                                    <input name="peentify_status" type="checkbox" id="peentify_status" <?php echo get_option('peentify_status')? 'checked': ''?>>
+                                    <input name="peentify_status" type="checkbox" id="peentify_status" <?php echo rest_sanitize_boolean( get_option('peentify_status') )? 'checked': ''?>>
                                     Enable
                                 </label>
                             </fieldset>
