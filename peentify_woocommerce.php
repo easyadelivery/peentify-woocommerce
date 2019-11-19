@@ -13,7 +13,7 @@
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This program is distributed in tcheck if exists post peentify_responsible_id if not exhe hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
@@ -60,13 +60,13 @@ class PeentifyWooCommerce {
 		$product = wc_get_product( $product_id );
 
 		# check if exists post peentify_responsible_id if not exist or it's not integer will be empty
-		if (isset( $_POST['peentify_responsible_id'] ) && is_integer($_POST['peentify_responsible_id']))
-		    $py_responsible_id = (int) $_POST['peentify_responsible_id'];
+		if ( isset( $_POST['peentify_responsible_id'] ) )
+		    $py_responsible_id = is_integer($_POST['peentify_responsible_id'])? $_POST['peentify_responsible_id']: '';
 		else
-		    $py_responsible_id = 0;
+		    $py_responsible_id = '';
 
 		# save the peentify_responsible_id meta
-		$product->update_meta_data( 'peentify_responsible_id', sanitize_text_field( $py_responsible_id ) );
+		$product->update_meta_data( 'peentify_responsible_id', $py_responsible_id );
 		$product->save();
 	}
 
@@ -99,12 +99,12 @@ class PeentifyWooCommerce {
 
 		# check if exists post peentify_responsible_id if not exist or it's not integer will be empty
 		if (isset( $_POST['peentify_integrate_with_system'] ))
-			$py_integrate_with_system = $_POST['peentify_integrate_with_system'];
+			$py_integrate_with_system = (boolean) $_POST['peentify_integrate_with_system'];
 		else
 			$py_integrate_with_system = false;
 
 		# save the peentify_integrate_with_system meta
-		$product->update_meta_data( 'peentify_integrate_with_system', rest_sanitize_boolean( $py_integrate_with_system ) );
+		$product->update_meta_data( 'peentify_integrate_with_system', $py_integrate_with_system );
 		$product->save();
 	}
 
